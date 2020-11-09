@@ -46,6 +46,14 @@ const A11y = {
     $el.attr('aria-disabled', false);
     return $el;
   },
+  //Set Hidden
+  setHiddenClass: function setHiddenClass(el) {
+    let swiper = this;
+    let params = swiper.params.a11y;
+    if (!el.hasClass(swiper.params.slideVisibleClass)) {
+      el.addClass(params.slideHiddenClass);
+    }
+  },
   onEnterKey(e) {
     const swiper = this;
     const params = swiper.params.a11y;
@@ -132,6 +140,26 @@ const A11y = {
       });
     }
   },
+  updateHiddenSlide: function () {
+    let swiper = this;
+    let params = swiper.params.a11y;
+    //hidden
+    if (swiper.params.watchSlidesVisibility === true) {
+      swiper.slides.each(function (slideEl) {
+        for (let i = 0; i < slideEl.children.length; i++) {
+          let $slideEl = $(slideEl);
+          slideEl.children[i].classList.remove(params.slideHiddenClass);
+        }
+
+        if(!$(slideEl).hasClass(swiper.params.slideVisibleClass)){
+          for (let i = 0; i < slideEl.children.length; i++) {
+            let $slideEl = $(slideEl);
+            swiper.a11y.setHiddenClass($(slideEl.children[i]));
+          }
+        }
+      });
+    }
+  },
   init() {
     const swiper = this;
     const params = swiper.params.a11y;
@@ -169,6 +197,18 @@ const A11y = {
       const $slideEl = $(slideEl);
       swiper.a11y.addElLabel($slideEl, `${$slideEl.index() + 1} / ${swiper.slides.length}`);
     });
+
+    //Hidden
+    if (swiper.params.watchSlidesVisibility === true) {
+      swiper.slides.each(function (slideEl) {
+        if(!$(slideEl).hasClass(swiper.params.slideVisibleClass)){
+          for (let i = 0; i < slideEl.children.length; i++) {
+            let $slideEl = $(slideEl);
+            swiper.a11y.setHiddenClass($(slideEl.children[i]));
+          }
+        }
+      });
+    }
 
     // Navigation
     let $nextEl;
@@ -258,6 +298,7 @@ export default {
       nextSlideMessage: 'Next slide',
       firstSlideMessage: 'This is the first slide',
       lastSlideMessage: 'This is the last slide',
+      slideHiddenClass: 'swiper-slide-hidden',
       paginationBulletMessage: 'Go to slide {{index}}',
       containerMessage: null,
       containerRoleDescriptionMessage: null,
@@ -297,5 +338,9 @@ export default {
       if (!swiper.params.a11y.enabled) return;
       swiper.a11y.destroy();
     },
+    slideChange: function (swiper){
+      if (!swiper.params.a11y.enabled) return;
+      swiper.a11y.updateHiddenSlide();
+    }
   },
 };
